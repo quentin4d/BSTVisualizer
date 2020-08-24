@@ -1,0 +1,48 @@
+#title{
+    font-family: 'Adamina';
+    text-align: center;
+    padding: 10px;
+    color: rgb(42, 0, 228);
+}
+#inputForm{
+    height: 50px; 
+    width: 200px; 
+    text-align: center;
+    margin: auto;
+    background-color: rgb(39, 31, 158); 
+}
+#userInput{
+    position: relative;  
+    display: inline-block;
+    top: 20%;
+    width: 80px; 
+    height: 20px; 
+    margin: auto;
+    text-align: center;
+}
+#inputButton{
+    position: relative;
+    top: 25%;
+    float: right;
+    margin-right: 15px;
+}
+.body{
+    background-color: rgb(196, 252, 191);
+}
+/* #divBorder{
+    position: absolute;
+    width: 70px; 
+    height: 70px; 
+    border-radius: 50%; 
+    border: 1px solid black; 
+}
+#newDiv{
+    color: black;
+    position: absolute;
+    display: block;
+    left: 100px;
+    top: 150px;
+    border: 1px solid green; 
+    border-radius: 50%; 
+    text-align: center;
+} */
