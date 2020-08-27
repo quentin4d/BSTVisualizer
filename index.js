@@ -101,7 +101,6 @@ class BST {
         };
         this.insertHelper = function (key, n) {
             if (n == null) {
-                console.log("KEY: "+key)
                 var newNode = new BSTNode(key);
                 this.nodeList.push(newNode);
                 return newNode;
@@ -121,11 +120,20 @@ class BST {
             this.numKeys--;
         };
         this.removeHelper = function (key, n) {
+            if(n == null)
+                return n;
             if (key < n.key)
                 n.left = this.removeHelper(key, n.left);
             else if (key > n.key)
                 n.right = this.removeHelper(key, n.right);
             else {
+                this.nodeList.splice(this.nodeList.indexOf(n), 1);
+                for(let i = 0; i < document.body.children.length; i++){
+                    if(document.body.children[i].id == key){
+                        console.log("REMOVED");
+                        document.body.removeChild(document.body.children[i]);
+                    }
+                }
                 if (n.right == null) 
                     return n.left;
                 else if (n.left == null)
@@ -158,126 +166,158 @@ let nodeNum = 0;
 let userTree = null;
 async function insertNode(e){
     e.preventDefault();
-    let divBorder = document.createElement("Div"); 
-    let newDiv = document.createElement("Div");  
+    //let divBorder = document.createElement("Div"); 
+    
     let x = document.getElementById("userInput").value;
     document.getElementById('inputForm').reset();
-    userTree.insert(x); 
-    console.log("HELLO")
-    console.log(parseFloat(6))
+    if(userTree.nodeList.find(elem => elem.key == x) == undefined){
+        userTree.insert(x); 
 
-    var currentNode = userTree.nodeList.find(node => node.key == x);
-    
-    var currentParent = currentNode.parent;
-    document.body.appendChild(newDiv); 
-    $(newDiv).attr({
-        'id': 'Node'+nodeNum++
-    }); 
-    if(currentParent != null){
-        if(currentParent.left == currentNode)   
-            (currentNode.leftLocation = currentParent.leftLocation-50);
-        if(currentParent.right == currentNode)
-            (currentNode.leftLocation = currentParent.leftLocation+50);
-    }
-    
-    currentNode.topLocation = userTree.getDepth(currentNode)*50+userTree.rootTop+25;
-    
-    console.log("newDiv: "+newDiv)
-    $(newDiv).css({
-        'color': 'black',
-        'position': 'absolute', 
-        'left': currentNode.leftLocation+'px',
-        'top': currentNode.topLocation+'px',
-        'height': '20px',  
-        'width': '30px',  
-        'border': '1px solid green', 
-        'border-radius':'50%', 
-        'text-align':'center', 
-    });
+        var currentNode = userTree.nodeList.find(node => node.key == x);
+        
+        var currentParent = currentNode.parent;
+        
+        if(currentParent != null){
+            if(currentParent.left == currentNode)   
+                (currentNode.leftLocation = currentParent.leftLocation-50);
+            if(currentParent.right == currentNode)
+                (currentNode.leftLocation = currentParent.leftLocation+50);
+        }
+        
+        currentNode.topLocation = userTree.getDepth(currentNode)*50+userTree.rootTop+25;
+        
+        if(userTree.nodeList.find(node => node.leftLocation < 0 || node.leftLocation > document.body.clientWidth) != undefined){
+            userTree.remove(x)
+            alert("OUT OF BOUNDS")
+        }else{
+            let newDiv = document.createElement("Div");  
+            $(newDiv).attr({
+                'id': 'Node'+nodeNum++
+            }); 
+            $(newDiv).css({
+                'color': 'black',
+                'position': 'absolute', 
+                'left': currentNode.leftLocation+'px',
+                'top': currentNode.topLocation+'px',
+                'height': '20px',  
+                'width': '30px',  
+                'border': '1px solid green', 
+                'border-radius':'50%', 
+                'text-align':'center', 
+            });
+            document.body.appendChild(newDiv);
+        
 
-    checkForCollision(currentNode);
+            await checkForCollision(currentNode); 
 
-    for(let i = 0; i < lineNum; i++){//clear all lines before each insertion
-        for(let j = 0; j < document.body.children.length; j++){
-            if(document.body.children[j].id == "Line"+i){
-                document.body.removeChild(document.body.children[j]);
+            for(let i = 0; i < lineNum; i++){//clear all lines before each insertion
+                for(let j = 0; j < document.body.children.length; j++){
+                    if(document.body.children[j].id == "Line"+i){
+                        document.body.removeChild(document.body.children[j]);
+                    }
+                }
+            }
+            await addLines(userTree.root)
+            
+            $(newDiv).append(x); 
+            $(this.root).append(this.leftBorder); 
+            $(this.root).append(this.rightBorder);
+            if(userTree.nodeList.find(node => node.leftLocation < 0 || node.leftLocation > document.body.clientWidth) != undefined){
+                for(var i = 0; i < userTree.nodeList.length; i++){
+                    userTree.remove(userTree.nodeList[i].key);
+                }
+                alert("OUT OF BOUNDS")
             }
         }
     }
-    await addLines(userTree.root)
-    
-    $(newDiv).append(x); 
-    $(this.root).append(this.leftBorder); 
-    $(this.root).append(this.rightBorder);
-    if(userTree.nodeList.find(node => node.leftLocation < 0 || node.leftLocation > document.body.clientWidth) != undefined){
-        alert("OUT OF BOUNDS")
-        for(var i = 0; i < userTree.nodeList.length; i++){
-            userTree.remove(userTree.nodeList[i].key);
-            console.log("removed: "+userTree.nodeList[i].key)
-        }
-        console.log(userTree.nodeList);
-    }
-
 }
 
 async function recursiveCollisionCheck(root){
     if(root == null) return; 
-    await recursiveCollisionCheck(root.left)
-    checkForCollision(root);
-    await recursiveCollisionCheck(root.right)
+    recursiveCollisionCheck(root.left)
+    await checkForCollision(root);
+    recursiveCollisionCheck(root.right)
 }
 async function checkForCollision(currentNode){
     for(var i = 0; i < userTree.nodeList.length; i++){
         if(currentNode != userTree.nodeList[i] && currentNode.topLocation == userTree.nodeList[i].topLocation && //check for collisions (if at same level and interfering with another node)
             currentNode.leftLocation > userTree.nodeList[i].leftLocation - 32 && currentNode.leftLocation < userTree.nodeList[i].leftLocation + 32){
-            await fixCollision(currentNode, currentNode.parent);
+                console.log(currentNode.key+" COLLISION WITH "+userTree.nodeList[i].key);
+                //await fixCollision(currentNode, currentNode.parent);
+                await fixCollision(currentNode,  userTree.nodeList[i]);
+                await addLines(userTree.root)
         }
     }
 }
-async function fixCollision(n, root){
-    if(root.left == n){
-        root.parent.left == root ? leftCollision(root.parent) : leftCollision(root);//if parent of collision node is a left child, shift from its grandparent
-        await recursiveCollisionCheck(root.parent);
+async function fixCollision(n, collisionNode){ 
+    let temp1 = $.extend(true, {}, n);
+    let temp2 = $.extend(true, {}, collisionNode);
+    while(temp1.parent != temp2.parent){//end up with common parent
+        temp1.parent = temp1.parent.parent; 
+        temp2.parent = temp2.parent.parent;
     }
-    if(root.right == n){
-        root.parent.right == root ? rightCollision(root.parent) : rightCollision(root);
-        await recursiveCollisionCheck(root.parent);
-    }
+    let commonParent = temp1.parent; 
+    console.log("COMMON PARENT: "+commonParent.key)
+    collision(commonParent)
+    // if(n.parent.left == n){//current node is a left child
+    //     await leftCollision(commonParent.right)
+    //     await recursiveCollisionCheck(commonParent.right);
+    // }
+    // if(n.parent.right == n){//current node is a right child
+    //     await rightCollision(commonParent.left)
+    //     await recursiveCollisionCheck(commonParent.left);
+    // }
 }
-async function leftCollision(root){
+async function collision(root){
     if(root == null){
-        return; 
+        return;
     }
-    leftCollision(root.left);
+    await shiftLeft(root.left); 
+    await shiftRight(root.right);
+    await addLines(userTree.root);
+}
+
+async function shiftLeft(root){
+    if(root == null){
+        return;
+    }
+    shiftLeft(root.left);
     for(var i = 0; i < userTree.nodeList.length; i++){
         if(userTree.nodeList[i].key == root.key){
-            $(document.getElementById('Node'+i)).css({
-                'left': parseInt(document.getElementById("Node"+i).style.left)+50+'px'
-            })
-            userTree.nodeList[i].leftLocation = parseInt(document.getElementById('Node'+i).style.left);
+            if(parseInt(document.getElementById("Node"+i).style.left)-20 > 0){
+                $(document.getElementById('Node'+i)).css({
+                    'left': parseInt(document.getElementById("Node"+i).style.left)-20+'px'
+                })
+                userTree.nodeList[i].leftLocation = parseInt(document.getElementById('Node'+i).style.left);
+            }
             await checkForCollision(userTree.nodeList[i]);
+            //await addLines(userTree.root);
         }
     }
-    leftCollision(root.right);
+    shiftLeft(root.right);
 }
-async function rightCollision(root){
+async function shiftRight(root){
     if(root == null){
-        return; 
+        return;
     }
-    rightCollision(root.left);
+    shiftRight(root.left);
     for(var i = 0; i < userTree.nodeList.length; i++){
         if(userTree.nodeList[i].key == root.key){
-            $(document.getElementById('Node'+i)).css({
-                'left': parseInt(document.getElementById("Node"+i).style.left)-50+'px'
-            })
-            userTree.nodeList[i].leftLocation = parseInt(document.getElementById('Node'+i).style.left);
+            if(parseInt(document.getElementById("Node"+i).style.left)+50 < document.body.clientWidth){
+                $(document.getElementById('Node'+i)).css({
+                    'left': parseInt(document.getElementById("Node"+i).style.left)+20+'px'
+                })
+                userTree.nodeList[i].leftLocation = parseInt(document.getElementById('Node'+i).style.left);
+            }
+            await checkForCollision(userTree.nodeList[i]);
+            //await addLines(userTree.root);
         }
     }
-    rightCollision(root.right);
+    shiftRight(root.right);
 }
 let lineNum = 0;
 async function addLines(root){
-    if(root == null){
+    if(root == null){ 
         return;
     }
     await addLines(root.left)
